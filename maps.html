@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Interactive World Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Include Leaflet CSS -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+        /* Set the height of the map */
+        html, body, #map {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Custom styles for the map */
+        .leaflet-container {
+            background: #eef2f3;
+        }
+    </style>
+</head>
+<body>
+    <!-- Map Container -->
+    <div id="map"></div>
+
+    <!-- Include Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize the map
+        var map = L.map('map', {
+            center: [20, 0],
+            zoom: 2,
+            minZoom: 2, // Minimum zoom level
+            maxZoom: 5, // Maximum zoom level
+            zoomControl: true, // Display zoom controls
+            worldCopyJump: false, // Prevent map from wrapping around
+            maxBounds: [
+                [-90, -180], // Southwest coordinates
+                [90, 180]    // Northeast coordinates
+            ],
+            maxBoundsViscosity: 1.0 // Prevent panning outside the bounds
+        });
+
+        // Add a tile layer for background
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '',
+            noWrap: true // Prevent map tiles from repeating horizontally
+        }).addTo(map);
+
+        // Style for country boundaries
+        function countryStyle(feature) {
+            return {
+                fillColor: '#f2efe9',
+                weight: 0.5, // Thinner borders
+                opacity: 1,
+                color: '#555', // Border color
+                fillOpacity: 0 // Transparent fill
+            };
+        }
+
+        // Function to highlight country on hover
+        function highlightFeature(e) {
+            var layer = e.target;
+
+            layer.setStyle({
+                fillColor: '#ddc691', // Highlight color
+                fillOpacity: 1
+            });
+
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+        }
+
+        // Function to reset highlight
+        function resetHighlight(e) {
+            geojson.resetStyle(e.target);
+        }
+
+        // Function to handle country click
+        function onCountryClick(e) {
+            var properties = e.target.feature.properties;
+            var countryName = properties.ADMIN; // Country name in English
+            if (!countryName) {
+                console.log(properties); // Log properties to see available keys
+                alert("Country name not found");
+            } else {
+                alert("You clicked on " + countryName);
+            }
+        }
+
+        // Apply event listeners to each country
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: onCountryClick
+            });
+        }
+
+        var geojson;
+
+        // Fetch and load GeoJSON data
+        fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+        .then(function(response){
+            return response.json();
+        })
+        .then(function(data){
+            geojson = L.geoJson(data, {
+                style: countryStyle,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+        })
+        .catch(function(error){
+            console.error('Error loading GeoJSON data:', error);
+        });
+    </script>
+</body>
+</html>
