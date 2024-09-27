@@ -84,15 +84,17 @@
             geojson.resetStyle(e.target);
         }
 
-        // Function to handle country click
+ // Modificar a função onCountryClick
         function onCountryClick(e) {
             var properties = e.target.feature.properties;
-            var countryName = properties.ADMIN; // Country name in English
-            if (!countryName) {
-                console.log(properties); // Log properties to see available keys
-                alert("Country name not found");
+            var countryName = properties.ADMIN;
+            if (countryName) {
+                // Enviar o nome do país para o Flutter
+                if (window.flutter_inappwebview) {
+                    window.flutter_inappwebview.callHandler('countryClicked', countryName);
+                }
             } else {
-                alert("You clicked on " + countryName);
+                console.log(properties);
             }
         }
 
